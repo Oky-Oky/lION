@@ -1,0 +1,296 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <windows.h>
+
+#include <cmath>
+
+// Глобальные переменные для вращения
+double rotate_y = 0;
+double rotate_x = 0;
+double zoom = -3.5;
+
+// Управление стрелками
+void specialKeys(int key, int x, int y) {
+    if (key == GLUT_KEY_RIGHT) rotate_y += 10;
+    else if (key == GLUT_KEY_LEFT) rotate_y -= 10;
+    else if (key == GLUT_KEY_UP) rotate_x += 10;
+    else if (key == GLUT_KEY_DOWN) rotate_x -= 10;
+    glutPostRedisplay();
+}
+
+void keyboard(unsigned char key, int x, int y) {
+    if (key == 'r' || key == 'R') {
+        rotate_x = 0;
+        rotate_y = 0;
+        glutPostRedisplay();
+    }
+    else if (key == '+' || key == '=') {
+        zoom += 0.3f;
+        glutPostRedisplay();
+    }
+    else if (key == '-') {
+        zoom -= 0.3f;
+        glutPostRedisplay();
+    }
+}
+
+void setColor(float r, float g, float b) {
+    glColor3f(r, g, b);
+}
+
+// ТУЛОВИЩЕ (увеличил и сделал более вытянутым)
+void drawBody() {
+    glPushMatrix();
+    setColor(0.85f, 0.65f, 0.35f);  // Рыжий
+    glTranslatef(0.0f, -0.15f, 0.0f);
+    glScalef(1.1f, 0.85f, 1.6f);    // Увеличил туловище
+    glutSolidSphere(0.55f, 30, 30);
+    glPopMatrix();
+}
+
+// ГОЛОВА (без гривы)
+void drawHead() {
+    glPushMatrix();
+    setColor(0.85f, 0.65f, 0.35f);
+    glTranslatef(0.0f, 0.2f, 0.85f);
+    glutSolidSphere(0.48f, 30, 30);
+    glPopMatrix();
+}
+
+// МОРДА, ГЛАЗА, НОС, УШИ
+void drawFace() {
+    glPushMatrix();
+    glTranslatef(0.0f, 0.15f, 1.18f);  // Сместил вперёд
+
+    // Морда
+    setColor(0.8f, 0.6f, 0.3f);
+    glPushMatrix();
+    glScalef(0.58f, 0.52f, 0.48f);
+    glutSolidSphere(0.38f, 25, 25);
+    glPopMatrix();
+
+    // Нос
+    setColor(0.15f, 0.1f, 0.08f);
+    glPushMatrix();
+    glTranslatef(0.0f, -0.08f, 0.45f);
+    glutSolidSphere(0.12f, 20, 20);
+    glPopMatrix();
+
+    // Глаза (белки)
+    setColor(1.0f, 1.0f, 1.0f);
+    glPushMatrix();
+    glTranslatef(-0.24f, 0.2f, 0.32f);
+    glutSolidSphere(0.1f, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.24f, 0.2f, 0.32f);
+    glutSolidSphere(0.1f, 20, 20);
+    glPopMatrix();
+
+    // Зрачки
+    setColor(0.0f, 0.0f, 0.0f);
+    glPushMatrix();
+    glTranslatef(-0.24f, 0.19f, 0.42f);
+    glutSolidSphere(0.06f, 20, 20);
+    glPopMatrix();
+
+    glPushMatrix();
+    glTranslatef(0.24f, 0.19f, 0.42f);
+    glutSolidSphere(0.06f, 20, 20);
+    glPopMatrix();
+
+    // Уши (маленькие, на голове, а не летающие)
+    setColor(0.8f, 0.6f, 0.35f);
+
+    // Левое ухо
+    glPushMatrix();
+    glTranslatef(-0.45f, 0.52f, -0.1f);
+    glRotatef(-15, 0, 0, 1);
+    glRotatef(10, 1, 0, 0);
+    glutSolidCone(0.12f, 0.18f, 15, 15);
+    glPopMatrix();
+
+    // Правое ухо
+    glPushMatrix();
+    glTranslatef(0.45f, 0.52f, -0.1f);
+    glRotatef(15, 0, 0, 1);
+    glRotatef(10, 1, 0, 0);
+    glutSolidCone(0.12f, 0.18f, 15, 15);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+// НОГИ (исправил, чтобы были под телом)
+void drawLegs() {
+    glDisable(GL_LIGHTING);
+
+    setColor(0.8f, 0.62f, 0.32f);
+
+    // Левая передняя
+    glPushMatrix();
+    glTranslatef(-0.5f, -0.55f, 0.65f);
+    glScalef(0.3f, 0.5f, 0.3f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Правая передняя
+    glPushMatrix();
+    glTranslatef(0.5f, -0.55f, 0.65f);
+    glScalef(0.3f, 0.5f, 0.3f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Левая задняя
+    glPushMatrix();
+    glTranslatef(-0.55f, -0.6f, -0.55f);
+    glScalef(0.32f, 0.55f, 0.32f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Правая задняя
+    glPushMatrix();
+    glTranslatef(0.55f, -0.6f, -0.55f);
+    glScalef(0.32f, 0.55f, 0.32f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+}
+
+// ХВОСТ
+void drawTail() {
+    glDisable(GL_LIGHTING);
+
+    setColor(0.7f, 0.5f, 0.28f);
+
+    glPushMatrix();
+    glTranslatef(0.0f, -0.1f, -0.95f);
+    glRotatef(-30, 1, 0, 0);
+    glRotatef(15, 0, 1, 0);
+
+    // Хвост
+    glPushMatrix();
+    glScalef(0.1f, 0.1f, 0.6f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Кисточка
+    setColor(0.55f, 0.35f, 0.18f);
+    glTranslatef(0.0f, 0.0f, 0.6f);
+    glutSolidSphere(0.11f, 15, 15);
+
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+}
+
+// ВСЯ СБОРКА ЛЬВА
+void drawLion() {
+    drawBody();
+    drawLegs();
+    drawTail();
+    drawHead();
+    drawFace();
+}
+
+void Display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+
+    // Камера
+    gluLookAt(0.0, 0.3, zoom,
+        0.0, -0.1, 0.0,
+        0.0, 1.0, 0.0);
+
+    // Вращение
+    glRotatef(rotate_x, 1.0, 0.0, 0.0);
+    glRotatef(rotate_y, 0.0, 1.0, 0.0);
+
+    // Пол (сетка для ориентира)
+    glDisable(GL_LIGHTING);
+    glColor3f(0.6f, 0.6f, 0.6f);
+    glBegin(GL_LINES);
+    for (float i = -1.8f; i <= 1.8f; i += 0.5f) {
+        glVertex3f(i, -0.8f, -1.8f);
+        glVertex3f(i, -0.8f, 1.8f);
+        glVertex3f(-1.8f, -0.8f, i);
+        glVertex3f(1.8f, -0.8f, i);
+    }
+    glEnd();
+
+    // Центральная точка (для ориентира)
+    glPointSize(5);
+    glColor3f(1, 0, 0);
+    glBegin(GL_POINTS);
+    glVertex3f(0, 0, 0);
+    glEnd();
+    glEnable(GL_LIGHTING);
+
+    // РИСУЕМ ЛЬВА
+    drawLion();
+
+    glutSwapBuffers();
+}
+
+// Освещение
+void setupLighting() {
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    float light_pos[] = { 2.0f, 3.0f, 3.0f, 1.0f };
+    float light_ambient[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    float light_diffuse[] = { 1.0f, 1.0f, 0.9f, 1.0f };
+
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+
+    // Фоновое освещение
+    float globalAmbient[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+}
+
+void Initialize() {
+    glClearColor(0.65f, 0.75f, 0.9f, 1.0f);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, 1.0, 0.1, 20.0);
+
+    glMatrixMode(GL_MODELVIEW);
+
+    setupLighting();
+}
+
+void reshape(int w, int h) {
+    if (h == 0) h = 1;
+    glViewport(0, 0, w, h);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0, (double)w / (double)h, 0.1, 20.0);
+
+    glMatrixMode(GL_MODELVIEW);
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(800, 600);
+    glutInitWindowPosition(100, 100);
+    glutCreateWindow("Лев - Простая версия");
+
+    Initialize();
+
+    glutDisplayFunc(Display);
+    glutReshapeFunc(reshape);
+    glutSpecialFunc(specialKeys);
+    glutKeyboardFunc(keyboard);
+
+    glutMainLoop();
+    return 0;
+}
